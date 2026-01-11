@@ -1,4 +1,6 @@
-<html lang="fr"><head>
+<html lang="fr">
+
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🏥 Hôpitaux de Garde – Luxembourg</title>
@@ -8,6 +10,7 @@
       padding: 0;
       box-sizing: border-box;
     }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #f5f7fa 0%, #e4edff 100%);
@@ -18,26 +21,33 @@
       flex-direction: column;
       align-items: center;
     }
+
     header {
       text-align: center;
       margin: 20px 0 30px;
       width: 100%;
     }
+
     h1 {
       font-size: 2.2rem;
       margin-bottom: 8px;
-      color: #0033a0; /* Luxembourg blue */
+      color: #0033a0;
+      /* Luxembourg blue */
     }
+
     .subtitle {
       font-size: 1.1rem;
-      color: #d00000; /* Luxembourg red */
+      color: #d00000;
+      /* Luxembourg red */
       font-weight: 500;
     }
+
     .time {
       font-size: 1.1rem;
       margin-top: 12px;
       color: #555;
     }
+
     .cards {
       display: flex;
       flex-wrap: wrap;
@@ -45,55 +55,76 @@
       gap: 24px;
       max-width: 1000px;
     }
+
     .card {
       background: white;
       border-radius: 16px;
       padding: 24px;
       width: 280px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
       text-align: center;
       transition: transform 0.2s;
     }
+
     .card:hover {
       transform: translateY(-4px);
     }
+
     .card h2 {
       font-size: 1.4rem;
       margin-bottom: 16px;
       color: #0033a0;
     }
+
     .card .hospital {
       font-size: 1.25rem;
       font-weight: 600;
       line-height: 1.4;
       color: #d00000;
     }
+
     .card .note {
       margin-top: 12px;
       font-size: 0.95rem;
       color: #555;
       font-style: italic;
     }
-    .card.nord h2 { border-top: 4px solid #00a040; } /* green for Nord */
-    .card.sud h2 { border-top: 4px solid #d00000; }  /* red for Sud */
-    .card.centre h2 { border-top: 4px solid #0033a0; } /* blue for Centre */
+
+    .card.nord h2 {
+      border-top: 4px solid #00a040;
+    }
+
+    /* green for Nord */
+    .card.sud h2 {
+      border-top: 4px solid #d00000;
+    }
+
+    /* red for Sud */
+    .card.centre h2 {
+      border-top: 4px solid #0033a0;
+    }
+
+    /* blue for Centre */
     footer {
       margin-top: 30px;
       text-align: center;
       color: #777;
       font-size: 0.9rem;
     }
+
     @media (max-width: 620px) {
       .cards {
         flex-direction: column;
         align-items: center;
       }
+
       .card {
         width: 90%;
       }
     }
   </style>
 </head>
+
 <body>
   <header>
     <h1>🏥 Hôpitaux de Garde – Luxembourg</h1>
@@ -102,9 +133,10 @@
   </header>
 
   <div class="cards">
-        <div class="card centre">
+    <div class="card centre">
       <h2>Région Centre</h2>
-      <div class="hospital" id="centre">Grande Garde : Centre Hospitalier de Luxembourg<br>Petite Garde : Hôpital Kirchberg</div>
+      <div class="hospital" id="centre">Grande Garde : Centre Hospitalier de Luxembourg<br>Petite Garde : Hôpital
+        Kirchberg</div>
       <div class="note" id="centre-note">La Petite Garde n'assure plus les admissions après 15h00.</div>
     </div>
     <div class="card nord">
@@ -121,9 +153,10 @@
   <footer>
     Source: Algorithme automatique – Paut faire des fautes!<br>
     Mise à jour automatique chaque minute<br>
-    <a href="#" id="download-link" style="color: #0033a0; text-decoration: underline; margin-top: 8px; display: inline-block;">
-    📥 Télécharger cette page pour l'utiliser hors ligne
-  </a>
+    <a href="#" id="download-link"
+      style="color: #0033a0; text-decoration: underline; margin-top: 8px; display: inline-block;">
+      📥 Télécharger cette page pour l'utiliser hors ligne
+    </a>
   </footer>
 
   <script>
@@ -191,13 +224,19 @@
       const nord = NORD;
       const sud = SUD;
 
-      // Weekend: Saturday (6) or Sunday (0)
+      // Weekend logic: Saturday (6) or Sunday (0)
       if (dayOfWeek === 6 || dayOfWeek === 0) {
-        const refSat = new Date(2026, 0, 3); // Jan 3, 2026 (Saturday)
-        const today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        const diffDays = Math.floor((today - refSat) / (1000 * 60 * 60 * 24));
+        const refSat = new Date(2026, 0, 3); // Saturday, Jan 3, 2026 → CHL
+        // Find the Saturday of the current weekend
+        let satOfThisWeekend;
+        if (dayOfWeek === 6) {
+          satOfThisWeekend = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        } else { // Sunday (0)
+          satOfThisWeekend = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+        }
+        const diffDays = Math.floor((satOfThisWeekend - refSat) / (1000 * 60 * 60 * 24));
         const weeksSince = Math.floor(diffDays / 7);
-        const hospital = (weeksSince % 3 === 2) ? HK : CHL;
+        const hospital = (weeksSince % 2 === 0) ? CHL : HK;
         return { nord, sud, centre: hospital, note: "" };
       }
 
@@ -232,7 +271,7 @@
         document.getElementById('current-time').textContent = "Erreur de chargement";
       }
     }
-        // Download current page as HTML file
+    // Download current page as HTML file
     function downloadSelf() {
       const htmlContent = document.documentElement.outerHTML;
       const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
@@ -248,7 +287,7 @@
       }, 100);
     }
 
-    document.getElementById('download-link').addEventListener('click', function(e) {
+    document.getElementById('download-link').addEventListener('click', function (e) {
       e.preventDefault();
       downloadSelf();
     });
@@ -258,43 +297,45 @@
     // Then every minute
     setInterval(updateDisplay, 60000);
   </script>
-<!-- Code injected by live-server -->
-<script>
-	// <![CDATA[  <-- For SVG support
-	if ('WebSocket' in window) {
-		(function () {
-			function refreshCSS() {
-				var sheets = [].slice.call(document.getElementsByTagName("link"));
-				var head = document.getElementsByTagName("head")[0];
-				for (var i = 0; i < sheets.length; ++i) {
-					var elem = sheets[i];
-					var parent = elem.parentElement || head;
-					parent.removeChild(elem);
-					var rel = elem.rel;
-					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
-						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
-						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
-					}
-					parent.appendChild(elem);
-				}
-			}
-			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
-			var address = protocol + window.location.host + window.location.pathname + '/ws';
-			var socket = new WebSocket(address);
-			socket.onmessage = function (msg) {
-				if (msg.data == 'reload') window.location.reload();
-				else if (msg.data == 'refreshcss') refreshCSS();
-			};
-			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
-				console.log('Live reload enabled.');
-				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
-			}
-		})();
-	}
-	else {
-		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
-	}
-	// ]]>
-</script>
+  <!-- Code injected by live-server -->
+  <script>
+    // <![CDATA[  <-- For SVG support
+    if ('WebSocket' in window) {
+      (function () {
+        function refreshCSS() {
+          var sheets = [].slice.call(document.getElementsByTagName("link"));
+          var head = document.getElementsByTagName("head")[0];
+          for (var i = 0; i < sheets.length; ++i) {
+            var elem = sheets[i];
+            var parent = elem.parentElement || head;
+            parent.removeChild(elem);
+            var rel = elem.rel;
+            if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+              var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+              elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+            }
+            parent.appendChild(elem);
+          }
+        }
+        var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+        var address = protocol + window.location.host + window.location.pathname + '/ws';
+        var socket = new WebSocket(address);
+        socket.onmessage = function (msg) {
+          if (msg.data == 'reload') window.location.reload();
+          else if (msg.data == 'refreshcss') refreshCSS();
+        };
+        if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+          console.log('Live reload enabled.');
+          sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+        }
+      })();
+    }
+    else {
+      console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+    }
+    // ]]>
+  </script>
 
-</body></html>
+</body>
+
+</html>

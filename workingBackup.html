@@ -132,18 +132,6 @@
     <div class="time" id="current-time">Heure actuelle (Luxembourg) : 08/01/2026 08:27</div>
   </header>
 
-  <div style="text-align: center; margin-bottom: 24px;">
-    <label for="select-date" style="font-weight: 600; color: #0033a0; margin-right: 10px;">
-      Voir la garde pour le :
-    </label>
-    <input type="date" id="select-date" min="2026-01-01" max="2026-06-30"
-      style="padding: 6px; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc;">
-    <label for="select-hour" style="margin-left: 16px; font-weight: 600; color: #0033a0;">
-      Heure :
-    </label>
-    <input type="time" id="select-hour" value="14:00"
-      style="padding: 6px; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; margin-left: 6px;">
-  </div>
 
   <div class="cards">
     <div class="card centre">
@@ -178,26 +166,6 @@
     const SUD = "Centre Hospitalier Emile Mayrisch (Esch-sur-Alzette)";
     const CHL = "Centre Hospitalier de Luxembourg";
     const HK = "Hôpital Kirchberg";
-
-    document.getElementById('select-date').addEventListener('change', updateFromPicker);
-    document.getElementById('select-hour').addEventListener('change', updateFromPicker);
-
-    function updateFromPicker() {
-      const dateInput = document.getElementById('select-date').value;
-      const timeInput = document.getElementById('select-hour').value;
-      if (!dateInput || !timeInput) return;
-
-      // Combine into ISO string and parse as local time (treat as Luxembourg time)
-      const dtStr = dateInput + 'T' + timeInput;
-      const selected = new Date(dtStr);
-
-      // Force interpretation as Luxembourg time (not UTC)
-      const luxOffset = -60; // CET = UTC+1 → offset = -60 minutes
-      const userOffset = selected.getTimezoneOffset();
-      const corrected = new Date(selected.getTime() + (userOffset + luxOffset) * 60000);
-
-      displayForDateTime(corrected);
-    }
 
     // Get current time in Luxembourg (without seconds, French format)
     function luxembourgTime() {
@@ -248,53 +216,7 @@
       if (diffAlt < 0) return CHL;
       return (diffAlt % 2 === 0) ? CHL : HK;
     }
-    // Reusable function to display hospitals for any Date object
-    function displayForDateTime(selectedDate) {
-      const dayOfWeek = selectedDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-      const hours = selectedDate.getHours();
 
-      const nord = NORD;
-      const sud = SUD;
-
-      // Weekend: Saturday (6) or Sunday (0)
-      if (dayOfWeek === 6 || dayOfWeek === 0) {
-        // Find Saturday of this weekend
-        const sat = new Date(selectedDate);
-        if (dayOfWeek === 0) { // Sunday → go back 1 day
-          sat.setDate(sat.getDate() - 1);
-        }
-        const refSat = new Date(2026, 0, 3); // Jan 3, 2026 = CHL
-        const diffDays = Math.floor((sat - refSat) / (1000 * 60 * 60 * 24));
-        const weeksSince = Math.floor(diffDays / 7);
-        const hospital = (weeksSince % 2 === 0) ? CHL : HK;
-        document.getElementById('nord').textContent = nord;
-        document.getElementById('sud').textContent = sud;
-        document.getElementById('centre').textContent = hospital;
-        document.getElementById('centre-note').textContent = "";
-        return;
-      }
-
-      // Weekday day shift: Mon–Fri, 7:00–16:59
-      if (dayOfWeek >= 1 && dayOfWeek <= 5 && hours >= 7 && hours < 17) {
-        // Grande Garde = hospital on duty TONIGHT (same calendar day night)
-        const grandeGarde = getNightHospital(selectedDate);
-        const petiteGarde = (grandeGarde === HK) ? CHL : HK;
-        document.getElementById('nord').textContent = nord;
-        document.getElementById('sud').textContent = sud;
-        document.getElementById('centre').innerHTML =
-          `Grande Garde : ${grandeGarde}<br>Petite Garde : ${petiteGarde}`;
-        document.getElementById('centre-note').textContent =
-          "La Petite Garde n'assure plus les admissions après 15h00.";
-        return;
-      }
-
-      // Night or outside hours
-      const hospital = getNightHospital(selectedDate);
-      document.getElementById('nord').textContent = nord;
-      document.getElementById('sud').textContent = sud;
-      document.getElementById('centre').textContent = hospital;
-      document.getElementById('centre-note').textContent = "";
-    }
     function getHospitalOnDuty(luxDate) {
       const d = luxDate;
       const dayOfWeek = d.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
@@ -336,23 +258,17 @@
 
     function updateDisplay() {
       try {
-        const luxStr = luxembourgTime();
+        const luxStr = luxembourgTime(); // e.g., "08/01/2026 à 14:30"
         const luxDate = parseLuxDate(luxStr);
         document.getElementById('current-time').textContent = `Heure actuelle (Luxembourg) : ${luxStr}`;
 
-        // Update date/time pickers to current time (optional)
-        const nowLux = new Date();
-        nowLux.toLocaleString("fr-FR", { timeZone: "Europe/Luxembourg" });
-        const offset = nowLux.getTimezoneOffset() * 60000;
-        const luxNow = new Date(nowLux.getTime() - offset + (3600000 * 1)); // approximate CET/CEST
-        const isoDate = luxNow.toISOString().split('T')[0];
-        const isoTime = luxNow.toISOString().split('T')[1].slice(0, 5);
-        document.getElementById('select-date').value = isoDate;
-        document.getElementById('select-hour').value = isoTime;
-
-        displayForDateTime(luxDate);
+        const duty = getHospitalOnDuty(luxDate);
+        document.getElementById('nord').textContent = duty.nord;
+        document.getElementById('sud').textContent = duty.sud;
+        document.getElementById('centre').innerHTML = duty.centre;
+        document.getElementById('centre-note').textContent = duty.note;
       } catch (e) {
-        console.error("Erreur :", e);
+        console.error("Erreur lors de la mise à jour :", e);
         document.getElementById('current-time').textContent = "Erreur de chargement";
       }
     }

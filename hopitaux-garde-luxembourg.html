@@ -248,53 +248,53 @@
       if (diffAlt < 0) return CHL;
       return (diffAlt % 2 === 0) ? CHL : HK;
     }
-    // Reusable function to display hospitals for any Date object
-    function displayForDateTime(selectedDate) {
-      const dayOfWeek = selectedDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-      const hours = selectedDate.getHours();
+// Reusable function to display hospitals for any Date object
+function displayForDateTime(selectedDate) {
+  const dayOfWeek = selectedDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const hours = selectedDate.getHours();
 
-      const nord = NORD;
-      const sud = SUD;
+  const nord = NORD;
+  const sud = SUD;
 
-      // Weekend: Saturday (6) or Sunday (0)
-      if (dayOfWeek === 6 || dayOfWeek === 0) {
-        // Find Saturday of this weekend
-        const sat = new Date(selectedDate);
-        if (dayOfWeek === 0) { // Sunday → go back 1 day
-          sat.setDate(sat.getDate() - 1);
-        }
-        const refSat = new Date(2026, 0, 3); // Jan 3, 2026 = CHL
-        const diffDays = Math.floor((sat - refSat) / (1000 * 60 * 60 * 24));
-        const weeksSince = Math.floor(diffDays / 7);
-        const hospital = (weeksSince % 2 === 0) ? CHL : HK;
-        document.getElementById('nord').textContent = nord;
-        document.getElementById('sud').textContent = sud;
-        document.getElementById('centre').textContent = hospital;
-        document.getElementById('centre-note').textContent = "";
-        return;
-      }
-
-      // Weekday day shift: Mon–Fri, 7:00–16:59
-      if (dayOfWeek >= 1 && dayOfWeek <= 5 && hours >= 7 && hours < 17) {
-        // Grande Garde = hospital on duty TONIGHT (same calendar day night)
-        const grandeGarde = getNightHospital(selectedDate);
-        const petiteGarde = (grandeGarde === HK) ? CHL : HK;
-        document.getElementById('nord').textContent = nord;
-        document.getElementById('sud').textContent = sud;
-        document.getElementById('centre').innerHTML =
-          `Grande Garde : ${grandeGarde}<br>Petite Garde : ${petiteGarde}`;
-        document.getElementById('centre-note').textContent =
-          "La Petite Garde n'assure plus les admissions après 15h00.";
-        return;
-      }
-
-      // Night or outside hours
-      const hospital = getNightHospital(selectedDate);
-      document.getElementById('nord').textContent = nord;
-      document.getElementById('sud').textContent = sud;
-      document.getElementById('centre').textContent = hospital;
-      document.getElementById('centre-note').textContent = "";
+  // Weekend: Saturday (6) or Sunday (0)
+  if (dayOfWeek === 6 || dayOfWeek === 0) {
+    // Find Saturday of this weekend
+    const sat = new Date(selectedDate);
+    if (dayOfWeek === 0) { // Sunday → go back 1 day
+      sat.setDate(sat.getDate() - 1);
     }
+    const refSat = new Date(2026, 0, 3); // Jan 3, 2026 = CHL
+    const diffDays = Math.floor((sat - refSat) / (1000 * 60 * 60 * 24));
+    const weeksSince = Math.floor(diffDays / 7);
+    const hospital = (weeksSince % 2 === 0) ? CHL : HK;
+    document.getElementById('nord').textContent = nord;
+    document.getElementById('sud').textContent = sud;
+    document.getElementById('centre').textContent = hospital;
+    document.getElementById('centre-note').textContent = "";
+    return;
+  }
+
+  // Weekday day shift: Mon–Fri, 7:00–16:59
+  if (dayOfWeek >= 1 && dayOfWeek <= 5 && hours >= 7 && hours < 17) {
+    // Grande Garde = hospital on duty TONIGHT (same calendar day night)
+    const grandeGarde = getNightHospital(selectedDate);
+    const petiteGarde = (grandeGarde === HK) ? CHL : HK;
+    document.getElementById('nord').textContent = nord;
+    document.getElementById('sud').textContent = sud;
+    document.getElementById('centre').innerHTML = 
+      `Grande Garde : ${grandeGarde}<br>Petite Garde : ${petiteGarde}`;
+    document.getElementById('centre-note').textContent = 
+      "La Petite Garde n'assure plus les admissions après 15h00.";
+    return;
+  }
+
+  // Night or outside hours
+  const hospital = getNightHospital(selectedDate);
+  document.getElementById('nord').textContent = nord;
+  document.getElementById('sud').textContent = sud;
+  document.getElementById('centre').textContent = hospital;
+  document.getElementById('centre-note').textContent = "";
+}
     function getHospitalOnDuty(luxDate) {
       const d = luxDate;
       const dayOfWeek = d.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
@@ -334,28 +334,29 @@
       return { nord, sud, centre: hospital, note: "" };
     }
 
-    function updateDisplay() {
-      try {
-        const luxStr = luxembourgTime();
-        const luxDate = parseLuxDate(luxStr);
-        document.getElementById('current-time').textContent = `Heure actuelle (Luxembourg) : ${luxStr}`;
+function updateDisplay() {
+  try {
+    // Get current time as string in Luxembourg (e.g., "11/01/2026 à 14:30")
+    const luxStr = luxembourgTime();
+    const luxDate = parseLuxDate(luxStr);
+    document.getElementById('current-time').textContent = `Heure actuelle (Luxembourg) : ${luxStr}`;
 
-        // Update date/time pickers to current time (optional)
-        const nowLux = new Date();
-        nowLux.toLocaleString("fr-FR", { timeZone: "Europe/Luxembourg" });
-        const offset = nowLux.getTimezoneOffset() * 60000;
-        const luxNow = new Date(nowLux.getTime() - offset + (3600000 * 1)); // approximate CET/CEST
-        const isoDate = luxNow.toISOString().split('T')[0];
-        const isoTime = luxNow.toISOString().split('T')[1].slice(0, 5);
-        document.getElementById('select-date').value = isoDate;
-        document.getElementById('select-hour').value = isoTime;
+    // 👇 NEW: Set date/time pickers to Luxembourg time correctly
+    const luxYear = luxDate.getFullYear();
+    const luxMonth = String(luxDate.getMonth() + 1).padStart(2, '0');
+    const luxDay = String(luxDate.getDate()).padStart(2, '0');
+    const luxHour = String(luxDate.getHours()).padStart(2, '0');
+    const luxMinute = String(luxDate.getMinutes()).padStart(2, '0');
 
-        displayForDateTime(luxDate);
-      } catch (e) {
-        console.error("Erreur :", e);
-        document.getElementById('current-time').textContent = "Erreur de chargement";
-      }
-    }
+    document.getElementById('select-date').value = `${luxYear}-${luxMonth}-${luxDay}`;
+    document.getElementById('select-hour').value = `${luxHour}:${luxMinute}`;
+
+    displayForDateTime(luxDate);
+  } catch (e) {
+    console.error("Erreur :", e);
+    document.getElementById('current-time').textContent = "Erreur de chargement";
+  }
+}
     // Download current page as HTML file
     function downloadSelf() {
       const htmlContent = document.documentElement.outerHTML;
